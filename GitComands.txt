@@ -1,0 +1,25 @@
+git init		-	No cmd para criar um repositorio
+git status	-	Para saber o status dos arquivos do repositorio -> o que estiver em vermelho é o que falta enviar
+git add		-	Vai adicionando a lista os arquivos que voce que enviar
+
+
+
+git remote add origin https://github.com/BugHunterBR/PDFC.git 	-	Faz a sincornização com o repo
+
+git remote -v			-	Para ver as origens do repositorio, para qual repo os arquivos estao sendo salvos
+
+git remote rm origin	-	Para remover a origem do repo, caso queira adicionar outra ou de outra forma
+
+
+git 
+
+
+git pull --rebase origin main	-	Baixa os arquivos do repo 
+
+git commit -a -m				-	Adiciona o arquivo git ignore
+
+
+1. git status
+2. git add .
+3. git commit -m
+4. git push origin main
