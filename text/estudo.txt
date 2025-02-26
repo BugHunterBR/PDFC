@@ -1,0 +1,13 @@
+1.	Tipos de variáveis
+
+                     /                   Variáveis                     \ 
+                    /                                                   \
+		        Numéricas						                 Categóricas (String)
+         /                     \                             /                         \ 
+        /                       \                           /                           \
+    Continua			       Discreta		              Nominal			          Ordinal
+- Números reais		    - Conjunto de valores      - Dados não mensuráveis	    - Categorizado sob 
+Temperatura, altura,	  finito (inteiro)           Sem ordenação: cor dos      uma ordenação: Tamanho P,
+peso, salario		      Contagem de algo		     olhos, gênero, id, nome     M e G 
+				        		                         
+							                                
