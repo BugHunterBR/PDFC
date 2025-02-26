@@ -1,0 +1,113 @@
+** Smoke Test
+
+Um teste de fumaça (smoke test) em um RPA (Robotic Process Automation) é uma verificação inicial 
+para garantir que o fluxo básico da automação está funcionando sem falhas críticas. O objetivo é 
+identificar erros comuns antes de testes mais detalhados.
+
+    1. Principais fluxos do RPA
+        a. Acesso ao e-mail e download de anexos
+        b. Identificação do tipo de arquivo
+        c. Extração de texto via OCR
+
+    2. Conjunto de entrada mínimo
+        a. Um e-mail com um anexo PNG e JPG simples e invertido
+        b. Um e-mail com um anexo PDF simples e invertido
+        c. Um e-mail com um anexo PDF escaneado
+        d. Um e-mail com um anexo ZIP contendo PNG, JPG, PDF, PDF invertido, PDF/IMG
+        e. Um e-mail com um anexo 7Z  contendo PNG, JPG, PDF, PDF invertido, PDF/IMG
+        f. Um e-mail com um anexo RAR contendo PNG, JPG, PDF, PDF invertido, PDF/IMG
+        g. Um e-mail com um anexo TAR contendo PNG, JPG, PDF, PDF invertido, PDF/IMG
+        h. Um e-mail com um anexo GZ  contendo PNG, JPG, PDF, PDF invertido, PDF/IMG      
+
+    3. Monitoramento
+        a. Inicia corretamente?
+        b. Acessa os e-mails não marcados e baixa os anexos nos arquivos temporarios?
+        c. Identifica a extenção dos anexos?
+        d. Aplica OCR com excelente grau de Identificação?
+        e. Registra os logs devidamente no arquivo?
+        f. O tempo de execução é satisfatorio? Possui gargalos? Quais?
+        g. Alguma saida inesperada foi identificada?
+
+    4. Validação de resultados e Observações
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+
+** Teste de Carga
+
+O teste de carga verifica como o RPA se comporta sob um volume significativo de trabalho. O objetivo 
+é garantir que a automação pode lidar com grandes quantidades de dados sem falhas, lentidão excessiva 
+ou consumo exagerado de recursos.
+
+    1. Limites de carga esperado
+        a. O número médio e máximo de arquivos processados por dia:     DEFINIR
+        b. O tempo máximo aceitável para cada processamento:            DEFINIR
+        c. O consumo esperado de CPU, RAM e disco:                      DEFINIR*
+
+    2. Cenario de teste:
+        * Os arquivos devem incluir PDFs grandes, imagens complexas para OCR e e-mails com múltiplos anexos.
+        a. Cenário normal: Volume de dados típico do dia a dia
+        b. Cenário intenso: O dobro ou triplo do volume normal
+        c. Cenário extremo: O máximo que o sistema pode processar antes de falhar
+
+    3. Monitoramento
+        * Task Manager (Windows) ou bibliotecas Python como psutil para medir consumo de recursos.
+        a. Tempo médio para processar cada item
+        b. Quantidade de CPU e memória utilizada
+        c. Ocorrência de falhas ou travamentos
+        d. Geração correta dos arquivos de saída
+
+    4. Idenficação e melhorias
+        a. Qual foi o ponto de falha?
+        b. O RPA consumiu muitos recursos?
+        c. Alguma etapa demorou mais do que o esperado?
+        
+            4.1. Possíveis otimizações incluem:
+                .
+                .
+                .
+                .
+                .
+                .
+                .
+                .
+
+** Teste de Integração
+
+O teste de integração verifica se os diferentes componentes do RPA funcionam corretamente juntos. Ele
+garante que a automação pode interagir corretamente com sistemas externos, APIs, bancos de dados e 
+outros módulos sem falhas.
+
+Objetivo
+- Garantir que os módulos do RPA (ex: extração de e-mails, OCR, processamento de dados) funcionam juntos.
+- **Validar a comunicação com sistemas externos (banco de dados, APIs, aplicativos).
+- Identificar falhas na troca de informações entre componentes.
+
+    1. Componentes a Testar
+        a. Acesso ao e-mail e download de anexos
+        b. Processamento de arquivos (OCR, extração de texto)
+        c. Validação de dados e interação com APIs
+        d. Geração e envio de relatórios
+
+    2. Casos de Teste
+        a. Teste de conexão com e-mail: O RPA consegue acessar e baixar anexos?
+        b. Teste de OCR: O texto extraído de imagens e PDFs é correto?
+        c. **Teste de API: O RPA envia e recebe dados corretamente de um sistema externo?
+        d. Teste de banco de dados: Os dados são inseridos corretamente após o processamento?
+
+    3. Executar e Monitorar o Processo
+        a. Rodar o RPA completo e verificar cada etapa.
+        b. Capturar logs e exceções para identificar falhas.
+        c. Medir tempos de resposta dos serviços externos.
+
+    4. Analise e Correção de Erros
+        Se houver falhas, pergunte:
+        ❌ O RPA não conseguiu acessar algum sistema?
+        ❌ O formato dos dados recebidos está incorreto?
+        ❌ Houve demora excessiva na comunicação?
