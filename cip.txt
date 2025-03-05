@@ -1,0 +1,11 @@
+Desenvolvido:
+    - Desenvolvimento de tela com status de andamento do processo de execução
+    - Desenvolvimento de extração de texto de arquivos PDF
+    - Implementação de OCR com suporte de leitura para as linguagens PT, DE, FR, ...
+    - Função para tratamento de imagem para melhor identificação de caracteres no uso da OCR
+    - Descompactação de arquivos dos formatos zip, 7z, rar, tar e gz para salvamento dos conteudos
+    - Implementação de arquivo .log e pontos de error e info para captura e registro de erros e informações pertinentes para consulta
+
+Em adamento:
+    - Implementação de modelo de machine learning para identificação se o conteudo do arquivo recebido é de certificado de qualidade
+    - Implementação de verificação de conteudo seguro antes de mover para pasta de rede

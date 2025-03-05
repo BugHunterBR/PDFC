@@ -57,7 +57,9 @@ def save_temp(attachment):
     except Exception as e:
         log.error(f'Erro ao criar arquivo temporário {attachment.FileName}: {e}')
         return None
-    
+
+def save_attachment(attachment, destination_folder_year, domain, receipt_date): # RETORNA UMA LISTA DE ARQUIVOS SALVOS - PODE APENAS FAZER ALGO, NÃO PRECISA RETORNAR
+    '''    
 def save_attachment(attachment, destination_folder_year, domain):
     try:
         destination_folder_domain = os.path.join(destination_folder_year, domain)
@@ -72,7 +74,26 @@ def save_attachment(attachment, destination_folder_year, domain):
     except Exception as e:
         log.error(f'Erro ao salvar o anexo {attachment.FileName}: {e}')
         return None
-    
+'''
+    try:
+        timestamp = receipt_date.strftime('%Y%m%d%H%M%S') 
+        destination_folder_domain = os.path.join(destination_folder_year, domain)
+        if not os.path.exists(destination_folder_domain):       # os.makedirs(destination_folder_domain, exist_ok=True)
+                os.makedirs(destination_folder_domain)
+                log.info(f'Pasta criada: {destination_folder_domain}')
+        saved_files = []
+        for index, attachment in enumerate(item.Attachments, start=1):
+            file_name = f"{domain}_{timestamp}_{index}_" + attachment.FileName
+            destination_attachment = os.path.join(destination_folder_domain, file_name)
+            if not os.path.exists(destination_attachment):
+                attachment.SaveAsFile(destination_attachment)
+                log.info(f'Anexo salvo em: {destination_attachment}') 
+                saved_files.append(destination_attachment)
+        return saved_files
+    except Exception as e:
+        log.error(f'Erro ao salvar o anexo {file_name}: {e}')
+        return None
+
 def status_checkmark(item, status):
     try:
         item.MarkAsTask(status)
@@ -163,7 +184,6 @@ def extract_files(file_temp, ext):
 
         move_files_to_root(extract_path)
         return extract_path, file_paths
-
     except Exception as e:
         log.error(f"Erro ao extrair {ext}: {e}")
         return None, []
@@ -171,33 +191,21 @@ def extract_files(file_temp, ext):
 def process_pdfs_compressed(extract_path):
     """ Processa arquivos PDF extraídos e extrai o texto. """
     text_content = []
-    
     for file in os.listdir(extract_path):
         if file.lower().endswith('.pdf'):
             file_path = os.path.join(extract_path, file)
-
             try:
                 with ppl.open(file_path) as pdf:
                     for page in pdf.pages:
                         text = page.extract_text()
                         if text and text.strip():
                             text_content.append(text)
-
                 if not text_content:
                     text_content = extract_text_from_compact_file(file_path)
-
                 log.info(f'Texto extraído do PDF {file}: {text_content[:100]}...')
-
             except Exception as e:
                 log.error(f"Erro ao processar PDF {file}: {e}")
-
     return text_content
-
-
-
-
-
-
 
 try:
     outlook = win.Dispatch('Outlook.Application').GetNamespace('MAPI')
@@ -243,6 +251,7 @@ try:
                                                     log.info(f'Texto extraído do PDF {attachment.FileName}: {text[:100]}...')
 
                                                 else:
+                                                    # ACRESCENTAR TRY/EXCEPT
                                                     pdf_img = p2i(file_temp, dpi=300, poppler_path='poppler-24.08.0\\Library\\bin')               # Uma lista de imagens, onde cada imagem representa uma página do PDF.
                                                     for i, img_convert in enumerate(pdf_img):                                   # Itera sobre cada imagem e á aloca uma por vez em img_convert
                                                         image = cv2.cvtColor(np.array(img_convert), cv2.COLOR_RGB2BGR)          # Converter imagem PIL para OpenCV               
@@ -252,6 +261,8 @@ try:
                                                         '''
                                                         LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
                                                         '''
+
+                                                    #save_attachment(file_temp)
 
                                                     log.info(f'Texto extraído do PDF/IMG {attachment.FileName}: {result_ocr[:100]}...')
                                                                                                                             
