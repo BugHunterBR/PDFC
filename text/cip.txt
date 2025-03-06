@@ -1,5 +1,5 @@
 Desenvolvido:
-    - Desenvolvimento de tela com status de andamento do processo de execução
+    - Desenvolvimento de tela com status de andamento do processo de execução (ANTES E DEPOIS 0092-2025)
     - Desenvolvimento de extração de texto de arquivos PDF
     - Implementação de OCR com suporte de leitura para as linguagens PT, DE, FR, ...
     - Função para tratamento de imagem para melhor identificação de caracteres no uso da OCR
