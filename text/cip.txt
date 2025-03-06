@@ -9,3 +9,4 @@ Desenvolvido:
 Em adamento:
     - Implementação de modelo de machine learning para identificação se o conteudo do arquivo recebido é de certificado de qualidade
     - Implementação de verificação de conteudo seguro antes de mover para pasta de rede
+    - Documentação

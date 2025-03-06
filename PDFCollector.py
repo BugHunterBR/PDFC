@@ -83,7 +83,7 @@ def save_attachment(attachment, destination_folder_year, domain):
                 log.info(f'Pasta criada: {destination_folder_domain}')
         saved_files = []
         for index, attachment in enumerate(item.Attachments, start=1):
-            file_name = f"{domain}_{timestamp}_{index}_" + attachment.FileName
+            file_name = f'{domain}_{timestamp}_{index}_' + attachment.FileName
             destination_attachment = os.path.join(destination_folder_domain, file_name)
             if not os.path.exists(destination_attachment):
                 attachment.SaveAsFile(destination_attachment)
