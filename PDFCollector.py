@@ -154,10 +154,8 @@ def process_pdfs_compressed(extract_path, poppler_path='poppler-24.08.0\\Library
                     # Converter o PDF em imagens
                     pdf_img = p2i(file_path, dpi=dpi, poppler_path=poppler_path)
                     for img_convert in pdf_img:
-                        # Corrigir possíveis distorções ou rotações na imagem
                         image = cv2.cvtColor(np.array(img_convert), cv2.COLOR_RGB2BGR)
-                        improved_img = image_correction(image)  # Corrigir a imagem
-                        # Realizar OCR para extrair texto
+                        improved_img = image_correction(image)
                         result_ocr = reader.readtext(improved_img)
                         page_text = ' '.join([text[1] for text in result_ocr])
                         if page_text:
@@ -232,7 +230,8 @@ try:
                                         if result_ocr:
                                             ...
                                         '''
-                                        LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO                      
+                                        LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
+                                        USAR result_ocr (ONDE O TEXTO É RETORNADO)                      
                                         '''
                                         # save_attachment()
                                         log.info(f'Texto extraído do JPG/PNG {attachment.FileName}: {result_ocr[:100]}...')
@@ -248,7 +247,33 @@ try:
                                         ext = os.path.splitext(file_temp)[1].lower()
                                         extract_path, file_paths = extract_files(file_temp, ext)
                                         if extract_path:
-                                            text_content = process_pdfs_compressed(extract_path)
+                                            #text_content = process_pdfs_compressed(extract_path)
+                                            text_content = []
+                                            for file in os.listdir(extract_path):
+                                                if file.lower().endswith('.pdf'):
+                                                    file_path = os.path.join(extract_path, file)
+                                                    try:
+                                                        # Tentar extrair texto diretamente do PDF
+                                                        with ppl.open(file_path) as pdf:
+                                                            for page in pdf.pages:
+                                                                text = page.extract_text()
+                                                                if text and text.strip():
+                                                                    text_content.append(text)
+                                                        if not text_content:
+                                                            # Converter o PDF em imagens
+                                                            # CRIAR FUNÇÃO SOMENTE PARA ISSO
+                                                            pdf_img = p2i(file_temp, dpi=300, poppler_path='poppler-24.08.0\\Library\\bin')
+                                                            for img_convert in pdf_img:
+                                                                image = cv2.cvtColor(np.array(img_convert), cv2.COLOR_RGB2BGR)
+                                                                improved_img = image_correction(image)
+                                                                result_ocr = reader.readtext(improved_img)
+                                                                page_text = ' '.join([text[1] for text in result_ocr])
+                                                                if page_text:
+                                                                    text_content.append(page_text)
+                                                        log.info(f'Texto extraído do PDF {file}: {text_content[:100]}...')
+                                                    except Exception as e:
+                                                        log.error(f"Erro ao processar PDF {file}: {e}")
+                                            
                                             '''
                                             LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO   
                                             USAR text_content (ONDE O TEXTO É RETORNADO)                   
