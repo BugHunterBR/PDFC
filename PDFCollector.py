@@ -8,7 +8,7 @@ import easyocr as ocr
 import tempfile as tf
 from pdf2image import convert_from_path as p2i
 import cv2
-import numpy as np                                              # USADA EM correct_skew
+import numpy as np
 import zipfile
 import py7zr
 import rarfile
@@ -31,15 +31,7 @@ MarckRed = int(config.get('MarckRed', 0))
 
 reader = ocr.Reader(['pt','en'], model_storage_directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ocr'))
 
-def extract_domain(email):  
-    try:
-        part_domain = email.split('@')[1]
-        main_domain = part_domain.split('.')[0]        
-        return main_domain.upper() 
-    except (IndexError, AttributeError):
-        return None
-
-def create_folder_year(base_folder_path, year):
+def create_folder_year(base_folder_path, year): 
     base_folder_year = os.path.join(base_folder_path, f'Arquivo {year}')
     if not os.path.exists(base_folder_year):
         os.makedirs(base_folder_year)
@@ -225,7 +217,7 @@ try:
                     receipt_date = item.ReceivedTime
                     receipt_year = receipt_date.year
                     sender = 'pedro@bosch.com'
-                    domain = extract_domain(sender)
+                    domain = sender.split('@')[1].split('.')[0] 
 
                     if domain is not None:
                         destination_folder_year = create_folder_year(base_folder_path, receipt_year)
