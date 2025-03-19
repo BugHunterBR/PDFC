@@ -143,15 +143,12 @@ def process_pdfs_compressed(extract_path, poppler_path='poppler-24.08.0\\Library
         if file.lower().endswith('.pdf'):
             file_path = os.path.join(extract_path, file)
             try:
-                # Tentar extrair texto diretamente do PDF
                 with ppl.open(file_path) as pdf:
                     for page in pdf.pages:
                         text = page.extract_text()
                         if text and text.strip():
                             text_content.append(text)
-                # Se não houver texto extraído diretamente, usar OCR
                 if not text_content:
-                    # Converter o PDF em imagens
                     pdf_img = p2i(file_path, dpi=dpi, poppler_path=poppler_path)
                     for img_convert in pdf_img:
                         image = cv2.cvtColor(np.array(img_convert), cv2.COLOR_RGB2BGR)
@@ -160,7 +157,6 @@ def process_pdfs_compressed(extract_path, poppler_path='poppler-24.08.0\\Library
                         page_text = ' '.join([text[1] for text in result_ocr])
                         if page_text:
                             text_content.append(page_text)
-                # Log do progresso
                 log.info(f'Texto extraído do PDF {file}: {text_content[:100]}...')
             except Exception as e:
                 log.error(f"Erro ao processar PDF {file}: {e}")
@@ -175,7 +171,6 @@ try:
             inbox = outlook.Folders[email_field].Folders['Inbox']
         except Exception as e:
             log.error(f'Erro ao acessar caixa de entrada: {e}')
-
     try:
         for item in tqdm(inbox.Items, desc='Processando e-mails', unit=' e-mail'):
             if item.Class == 43 and item.FlagStatus == 0: 
@@ -183,7 +178,7 @@ try:
                     sender = item.SenderEmailAddress
                     receipt_date = item.ReceivedTime
                     receipt_year = receipt_date.year
-                    sender = 'pedro@bosch.com'
+                    sender = 'pedro@bosch.com'                                      # ATENÇÃO - REMOVER
                     domain = sender.split('@')[1].split('.')[0] 
                     if domain is not None:
                         destination_folder_year = os.path.join(base_folder_path, f'Arquivo {receipt_year}')
@@ -250,16 +245,17 @@ try:
                                             #text_content = process_pdfs_compressed(extract_path)
                                             text_content = []
                                             for file in os.listdir(extract_path):
-                                                if file.lower().endswith('.pdf'):
+                                                if file.lower().endswith(('.pdf')):
                                                     file_path = os.path.join(extract_path, file)
                                                     try:
-                                                        # Tentar extrair texto diretamente do PDF
                                                         with ppl.open(file_path) as pdf:
                                                             for page in pdf.pages:
                                                                 text = page.extract_text()
                                                                 if text and text.strip():
                                                                     text_content.append(text)
-                                                        if not text_content:
+                                                                    log.info(f'Texto extraído do PDF {file}: {text_content[:100]}...')
+                                                        '''
+                                                        if not text and file.lower().endswith(('.jpg', '.png')):
                                                             # Converter o PDF em imagens
                                                             # CRIAR FUNÇÃO SOMENTE PARA ISSO
                                                             pdf_img = p2i(file_temp, dpi=300, poppler_path='poppler-24.08.0\\Library\\bin')
@@ -270,7 +266,21 @@ try:
                                                                 page_text = ' '.join([text[1] for text in result_ocr])
                                                                 if page_text:
                                                                     text_content.append(page_text)
-                                                        log.info(f'Texto extraído do PDF {file}: {text_content[:100]}...')
+                                                        '''             
+                                                    except Exception as e:
+                                                        log.error(f"Erro ao processar PDF {file}: {e}")
+                                                elif file.lower().endswith(('.jpg', '.png')):
+                                                    try:
+                                                        pdf_img = p2i(file_temp, dpi=300, poppler_path='poppler-24.08.0\\Library\\bin')
+                                                        for img_convert in pdf_img:
+                                                            image = cv2.cvtColor(np.array(img_convert), cv2.COLOR_RGB2BGR)
+                                                            improved_img = image_correction(image)
+                                                            result_ocr = reader.readtext(improved_img)
+                                                            page_text = ' '.join([text[1] for text in result_ocr])
+                                                            if page_text:
+                                                                text_content.append(page_text)
+
+                                                                log.info(f'Texto extraído do PDF {file}: {text_content[:100]}...')
                                                     except Exception as e:
                                                         log.error(f"Erro ao processar PDF {file}: {e}")
                                             
