@@ -26,8 +26,8 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assistant', 
     
 email_field = config.get('email_field')
 base_folder_path = config.get('base_folder_path')
-MarckCheck = int(config.get('MarckCheck', 0))
-MarckRed = int(config.get('MarckRed', 0))
+MarckCheck = int(config.get('MarckCheck', 1))
+MarckRed = int(config.get('MarckRed', 2))
 
 reader = ocr.Reader(['pt','en'], model_storage_directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ocr'))
 
@@ -173,7 +173,7 @@ try:
             log.error(f'Erro ao acessar caixa de entrada: {e}')
     try:
         for item in tqdm(inbox.Items, desc='Processando e-mails', unit=' e-mail'):
-            if item.Class == 43 and item.FlagStatus == 0: 
+            if item.Class == 43 and item.FlagStatus == 0:
                 try:
                     sender = item.SenderEmailAddress
                     receipt_date = item.ReceivedTime
@@ -199,9 +199,8 @@ try:
                                                     LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
                                                     '''
                                                     #save_attachment(file_temp)
-                                                    log.info(f'Texto extraído do PDF {attachment.FileName}: {text[:100]}...')
-                                                else:
-                                                    # CRIAR FUNÇÃO (A)
+                                                    log.info(f'Texto extraído do arquivo pdf {attachment.FileName}: {text[:50]}...')
+                                                if not text:
                                                     pdf_img = p2i(file_temp, dpi=300, poppler_path='poppler-24.08.0\\Library\\bin')
                                                     for i, img_convert in enumerate(pdf_img):
                                                         image = cv2.cvtColor(np.array(img_convert), cv2.COLOR_RGB2BGR)
@@ -210,32 +209,35 @@ try:
                                                         '''
                                                         LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
                                                         '''
-                                                    #save_attachment(file_temp)
-                                                    log.info(f'Texto extraído da IMG {attachment.FileName}: {result_ocr[:100]}...')
+                                                        #save_attachment(file_temp)
+                                                    log.info(f'Texto extraído da img {attachment.FileName}: {result_ocr[:50]}...')
                                     os.remove(file_temp)
                                     status_checkmark(item, MarckCheck)
                             except Exception as e:
-                                log.error(f'Erro ao processar arquivo PDF {attachment.FileName}: {e}')  
+                                log.error(f'Erro ao processar arquivo pdf {attachment.FileName}: {e}')  
                             
                             try:    
                                 if attachment.FileName.lower().endswith(('.jpg', '.png')):
                                     file_temp = save_temp(attachment)
                                     if file_temp:
-                                        # ADICIONAR FUNÇÃO (A)
                                         result_ocr = reader.readtext(file_temp)
                                         if result_ocr:
-                                            ...
-                                        '''
-                                        LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
-                                        USAR result_ocr (ONDE O TEXTO É RETORNADO)                      
-                                        '''
-                                        # save_attachment()
-                                        log.info(f'Texto extraído do JPG/PNG {attachment.FileName}: {result_ocr[:100]}...')
+                                            '''
+                                            LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
+                                            USAR result_ocr (ONDE O TEXTO É RETORNADO)                      
+                                            '''
+                                            # save_attachment(file_temp)
+                                        log.info(f'Texto extraído do arquivo de imagem {attachment.FileName}: {result_ocr[:50]}...')
                                     os.remove(file_temp)
                                     status_checkmark(item, MarckCheck)        
                             except Exception as e:
                                 log.error(f'Erro ao processar arquivo de imagem {attachment.FileName}: {e}')
+                            '''
+                            _______________________________________________________________________________________
 
+                                                                TRABALHANDO AQUI
+                            _______________________________________________________________________________________
+                            '''
                             try:       
                                 if attachment.FileName.lower().endswith(('.zip', '.7z', '.rar', '.tar', '.gz')):
                                     file_temp = save_temp(attachment)
@@ -246,58 +248,58 @@ try:
                                             #text_content = process_pdfs_compressed(extract_path)
 
                                             for file in os.listdir(extract_path):
+                                                file_path = os.path.join(extract_path, file)
                                                 if file.lower().endswith(('.pdf')):
-                                                    file_path = os.path.join(extract_path, file)
                                                     try:
                                                         with ppl.open(file_path) as pdf:
                                                             for page in pdf.pages:
                                                                 text = page.extract_text()
                                                                 if text and text.strip():
                                                                     '''
-                                                                    ML
+                                                                        LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
                                                                     '''
-                                                                    log.info(f'Texto extraído do PDF {file}: {text[:100]}...')
-                                                        '''
-                                                        
-                                                        NÃO ESTA FUNCIONANDO
-                                                        
-                                                        '''
-                                                        if not text:
+                                                                    # save_attachment(file_path)
+                                                                    log.info(f'Texto extraído do arquivo pdf {file}: {text[:50]}...')
+                                                    except Exception as e:
+                                                        log.error(f"Erro ao processar arquivo pdf {file}: {e}")
+
+                                                    if not text:
+                                                        try:    
                                                             with ppl.open(file_path) as pdf:
-                                                                for page in pdf.pages:
-                                                                    pdf_img = p2i(file_path, dpi=300, poppler_path='poppler-24.08.0\\Library\\bin')
-                                                                    for i, img_convert in enumerate(pdf_img):
+                                                                for page_num, _ in enumerate(pdf.pages):
+                                                                    pdf_img = p2i(file_path, dpi=150, first_page=page_num+1, last_page=page_num+1, poppler_path='poppler-24.08.0\\Library\\bin')
+                                                                    
+                                                                    for img_convert in pdf_img:
                                                                         image = cv2.cvtColor(np.array(img_convert), cv2.COLOR_RGB2BGR)
                                                                         improved_img = image_correction(image)
                                                                         result_ocr = reader.readtext(improved_img)
-                                                                        '''
-                                                                        LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
-                                                                        '''
-                                                                        if text and text.strip():
-                                                                            '''
-                                                                            ML
-                                                                            '''
-                                                                            log.info(f'Texto extraído da img {file}: {text[:100]}...')
                                                                         
-                                                    except Exception as e:
-                                                        log.error(f"Erro ao processar pdf/img convertida {file}: {e}")
+                                                                        extracted_text = " ".join(text[1] for text in result_ocr)
+                                                                        
+                                                                        if extracted_text.strip():  
+                                                                            '''
+                                                                            LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
+                                                                            '''
+                                                                            # save_attachment(file_path)
+                                                                            log.info(f'Texto extraído do arquivo {file_path}: {extracted_text[:50]}...')
+                                                        except Exception as e:
+                                                            log.error(f"Erro ao processar arquivo {file_path}: {e}")
 
+                                                    '''
+                                                    ACRESCENTAR MELHORIA DE IMAGEM
+                                                    '''
                                                 elif file.lower().endswith(('.jpg', '.png')):
-                                                    file_path = os.path.join(extract_path, file)
                                                     try:
-                                                        '''
-                                                        ACRESCENTAR MELHORIA DE IMAGEM
-                                                        '''
                                                         result_ocr = reader.readtext(file_path)
                                                         if result_ocr:
                                                                 '''
-                                                                ML
+                                                                LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
                                                                 '''
-                                                                log.info(f'Texto extraído do PDF {file}: {text[:100]}...')
+                                                                # save_attachment(file_path)
+                                                                log.info(f'Texto extraído do arquivo de imagem {file}: {text[:50]}...')
                                                     except Exception as e:
-                                                        log.error(f"Erro ao processar img compactada {file}: {e}")
+                                                        log.error(f"Erro ao processar arquivo de imagem {file}: {e}")
 
-                                            # save_attachment()
                                             if os.path.exists(extract_path):
                                                 for item in os.listdir(extract_path):
                                                     item_path = os.path.join(extract_path, item)
@@ -307,15 +309,19 @@ try:
                                                         else:
                                                             os.remove(item_path)
                                                     except Exception as e:
-                                                        print(f'Erro ao tentar remover {item_path}: {e}')
-                                    os.remove(file_temp)        
-                                    status_checkmark(item, MarckCheck)                          
+                                                        print(f'Erro ao tentar limpar arquivo temporario {item_path}: {e}')
+                                    
+                                        os.remove(file_temp)
+
+                                        # NÃO ESTA FUNCIONANDO
+                                        status_checkmark(item, MarckCheck)
+
                             except Exception as e:
-                                log.error(f'Erro ao processar o arquivo compactado {attachment.FileName}: {e}')            
+                                log.error(f'Erro ao processar o arquivo compactado {attachment.FileName}: {e}')
                 
                 except Exception as e:
                     log.error(f'Erro ao extrair informações do email {sender}: {e}') 
-                    item.MarkAsTask(MarckRed)         
+                    item.MarkAsTask(MarckRed)
                     item.FlagStatus = MarckRed
                     item.Save()
                   
