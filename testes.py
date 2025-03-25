@@ -1,7 +1,7 @@
 import os
 import json
 import logging as log
-import win32com.client as win
+import win32com.client as client
 from tqdm import tqdm
 import pdfplumber as ppl
 import easyocr as ocr
@@ -162,13 +162,23 @@ def process_pdfs_compressed(extract_path, poppler_path='poppler-24.08.0\\Library
                 log.error(f"Erro ao processar PDF {file}: {e}")
     return text_content
 
+def notify_unreadable_cert(sender, file_temp):
+    message = outlook.CreateItem(0)
+    message.To = sender
+    message.Subject = 'Illegible certificate'
+    message.Body = 'The attached file is illegible. \n\nPlease return a new file.'
+    message.Attachments.Add(file_temp)
+    message.Save()
+    message.Send()
+    
 try:
-    outlook = win.Dispatch('Outlook.Application').GetNamespace('MAPI')
+    outlook = client.Dispatch('Outlook.Application')
+    namespace = outlook.GetNamespace('MAPI')
     try:
-        inbox = outlook.Folders[email_field].Folders['TESTE PDFC']      # ATENÇÃO - ALTERAR
+        inbox = namespace.Folders[email_field].Folders['TESTE PDFC']      # ATENÇÃO - ALTERAR
     except Exception as e:
         try:
-            inbox = outlook.Folders[email_field].Folders['Inbox']
+            inbox = namespace.Folders[email_field].Folders['Inbox']
         except Exception as e:
             log.error(f'Erro ao acessar caixa de entrada: {e}')
     try:
@@ -176,11 +186,12 @@ try:
             if item.Class == 43 and item.FlagStatus == 0:
                 try:
                     sender = item.SenderEmailAddress
+                    sender = 'pedro@bosch.com'
+                    domain = sender.split('@')[1].split('.')[0] 
                     receipt_date = item.ReceivedTime
                     receipt_year = receipt_date.year
-                    sender = 'pedro@bosch.com'                                      # ATENÇÃO - REMOVER
-                    domain = sender.split('@')[1].split('.')[0] 
-                    if domain is not None:
+                    
+                    if domain and receipt_year:
                         destination_folder_year = os.path.join(base_folder_path, f'Arquivo {receipt_year}')
                         if not os.path.exists(destination_folder_year):
                             os.makedirs(destination_folder_year)
@@ -196,6 +207,11 @@ try:
                                                 text = page.extract_text()
                                                 if text and text.strip():
                                                     '''
+                                                    if True:
+                                                        notify_unreadable_cert(sender, file_temp)
+                                                    '''
+                                                    
+                                                    '''
                                                     LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
                                                     '''
                                                     #save_attachment(file_temp)
@@ -206,10 +222,15 @@ try:
                                                         image = cv2.cvtColor(np.array(img_convert), cv2.COLOR_RGB2BGR)
                                                         improved_img = image_correction(image)
                                                         result_ocr = reader.readtext(improved_img)
-                                                        '''
+                                                    '''
+                                                    if True:
+                                                        notify_unreadable_cert(sender, file_temp)
+                                                    '''
+                                                    '''
+                                                    Else:
                                                         LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
-                                                        '''
-                                                        #save_attachment(file_temp)
+                                                    '''
+                                                    #save_attachment(file_temp)
                                                     log.info(f'Texto extraído da img {attachment.FileName}: {result_ocr[:50]}...')
                                     os.remove(file_temp)
                                     status_checkmark(item, MarckCheck)
@@ -223,8 +244,13 @@ try:
                                         result_ocr = reader.readtext(file_temp)
                                         if result_ocr:
                                             '''
-                                            LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
-                                            USAR result_ocr (ONDE O TEXTO É RETORNADO)                      
+                                            if True:
+                                                notify_unreadable_cert(sender, file_temp)
+                                            '''
+                                            '''
+                                            else:
+                                                LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
+                                                USAR result_ocr (ONDE O TEXTO É RETORNADO)                      
                                             '''
                                             # save_attachment(file_temp)
                                         log.info(f'Texto extraído do arquivo de imagem {attachment.FileName}: {result_ocr[:50]}...')
@@ -256,6 +282,11 @@ try:
                                                                 text = page.extract_text()
                                                                 if text and text.strip():
                                                                     '''
+                                                                    if True:
+                                                                        notify_unreadable_cert(sender, file_temp)
+                                                                    '''
+                                                                    '''
+                                                                    else:
                                                                         LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
                                                                     '''
                                                                     # save_attachment(file_path)
@@ -278,7 +309,12 @@ try:
                                                                         
                                                                         if extracted_text.strip():  
                                                                             '''
-                                                                            LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
+                                                                            if True:
+                                                                                notify_unreadable_cert(sender, file_temp)
+                                                                            '''
+                                                                            '''
+                                                                            else:
+                                                                                LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
                                                                             '''
                                                                             # save_attachment(file_path)
                                                                             log.info(f'Texto extraído do arquivo {file_path}: {extracted_text[:50]}...')
@@ -292,11 +328,16 @@ try:
                                                     try:
                                                         result_ocr = reader.readtext(file_path)
                                                         if result_ocr:
-                                                                '''
+                                                            '''
+                                                            if True:
+                                                                notify_unreadable_cert(sender, file_temp)
+                                                            '''
+                                                            '''
+                                                            else:
                                                                 LOGICA PARA IDENTIFICAÇÃO SE O CONTEUDO É CERTIFICADO
-                                                                '''
+                                                            '''
                                                                 # save_attachment(file_path)
-                                                                log.info(f'Texto extraído do arquivo de imagem {file}: {text[:50]}...')
+                                                            log.info(f'Texto extraído do arquivo de imagem {file}: {text[:50]}...')
                                                     except Exception as e:
                                                         log.error(f"Erro ao processar arquivo de imagem {file}: {e}")
 
