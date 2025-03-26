@@ -15,8 +15,10 @@ import rarfile
 import tarfile
 import shutil
 #                           CRIAR LOGICA PARA LIMPAR AS PASTAS TEMPORARIAS
-# pip install rarfile --proxy='http://rb-proxy-de.bosch.com:8080'
-# http://rb-proxy-ca1.bosch.com:8080
+# pip install rarfile   --proxy='http://rb-proxy-de.bosch.com:8080'
+#                                http://rb-proxy-ca1.bosch.com:8080
+
+# file_temp - me da o caminho do arquivo compactado
 
 log.basicConfig(filename=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assistant', 'Processamento_PDFC.log'), level=log.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -57,7 +59,7 @@ def save_temp(attachment):
     except Exception as e:
         log.error(f'Erro ao criar arquivo temporário {attachment.FileName}: {e}')
 
-def save_attachment(attachment, destination_folder_year, domain, receipt_date): # RETORNA UMA LISTA DE ARQUIVOS SALVOS - PODE APENAS FAZER ALGO, NÃO PRECISA RETORNAR
+def save_attachment(attachment, destination_folder_year, domain, receipt_date): # RETORNA UMA LISTA DE ARQUIVOS SALVOS
     try:
         timestamp = receipt_date.strftime('%Y%m%d%H%M%S') 
         destination_folder_domain = os.path.join(destination_folder_year, domain)
@@ -103,8 +105,9 @@ def image_correction(image):                                                    
 
 def extract_files(file_temp, ext):
     """ Extrai arquivos compactados para uma pasta temporária e retorna a lista de arquivos extraídos. """
-    extract_path = os.path.join(tf.gettempdir(), f"extracted_{ext.strip('.')}")
+    extract_path = os.path.join(tf.gettempdir(), f"extracted_{ext.lstrip('.')}")
     os.makedirs(extract_path, exist_ok=True)
+
     try:
         if ext == '.zip':
             with zipfile.ZipFile(file_temp, 'r') as zip_ref:
@@ -119,19 +122,30 @@ def extract_files(file_temp, ext):
                 rar_ref.extractall(path=extract_path)
                 file_paths = rar_ref.namelist()
         # TESTAR - VERIFICAR SE ESTA FUNCIONAL
-        elif ext in ('.tar', '.gz'):
-            with tarfile.open(file_temp, 'r:*') as tar_ref:
-                tar_ref.extractall(path=extract_path)
-                file_paths = tar_ref.getnames()
-                #  gzip.GzipFile
-            # FALTA ACRESCENTAR
+        '''
+        elif ext in ('.tar', '.tar.gz', '.tgz', '.gz'):
+            if ext == '.gz' and not file_temp.endswith('.tar.gz'):
+                # Se for um .gz puro, descomprime sem extrair arquivos
+                with gzip.open(file_temp, 'rb') as gz_ref:
+                    output_path = os.path.join(extract_path, os.path.basename(file_temp).replace('.gz', ''))
+                    with open(output_path, 'wb') as out_f:
+                        shutil.copyfileobj(gz_ref, out_f)
+                    file_paths = [output_path]
+            else:
+                # Extrai arquivos de .tar e .tar.gz
+                with tarfile.open(file_temp, 'r:*') as tar_ref:
+                    tar_ref.extractall(path=extract_path)
+                    file_paths = tar_ref.getnames()
+        '''
         for root, _, files in os.walk(extract_path):
             for file in files:
                 src = os.path.join(root, file)
                 dest = os.path.join(extract_path, file)
                 if src != dest:
                     shutil.move(src, dest)
+
         return extract_path, file_paths
+    
     except Exception as e:
         log.error(f"Erro ao extrair {ext}: {e}")
         return None, []
@@ -170,12 +184,22 @@ def notify_unreadable_cert(sender, file_temp):
     message.Attachments.Add(file_temp)
     message.Save()
     message.Send()
-    
+    return None    
+
+def clean_directory(extract_path, file_paths):
+    if file_paths:
+        for archive in os.listdir(extract_path):
+            if os.path.isfile(os.path.join(extract_path, archive)):
+                os.remove(os.path.join(extract_path, archive))
+            elif os.path.isdir(os.path.join(extract_path, archive)):
+                shutil.rmtree(os.path.join(extract_path, archive))
+    return None
+
 try:
     outlook = client.Dispatch('Outlook.Application')
     namespace = outlook.GetNamespace('MAPI')
     try:
-        inbox = namespace.Folders[email_field].Folders['TESTE PDFC']      # ATENÇÃO - ALTERAR
+        inbox = namespace.Folders[email_field].Folders['TESTE PDFC']      # ALTERAR
     except Exception as e:
         try:
             inbox = namespace.Folders[email_field].Folders['Inbox']
@@ -268,10 +292,18 @@ try:
                                 if attachment.FileName.lower().endswith(('.zip', '.7z', '.rar', '.tar', '.gz')):
                                     file_temp = save_temp(attachment)
                                     if file_temp:
+                                        
                                         ext = os.path.splitext(file_temp)[1].lower()
                                         extract_path, file_paths = extract_files(file_temp, ext)
+
+                                        '''
+                                        extract_files(file_temp, ext) === PAREI AQUI
+
+                                        '''
+
                                         if extract_path:
                                             #text_content = process_pdfs_compressed(extract_path)
+                                            
 
                                             for file in os.listdir(extract_path):
                                                 file_path = os.path.join(extract_path, file)
@@ -320,7 +352,7 @@ try:
                                                                             log.info(f'Texto extraído do arquivo {file_path}: {extracted_text[:50]}...')
                                                         except Exception as e:
                                                             log.error(f"Erro ao processar arquivo {file_path}: {e}")
-
+                                                            
                                                     '''
                                                     ACRESCENTAR MELHORIA DE IMAGEM
                                                     '''
@@ -340,7 +372,9 @@ try:
                                                             log.info(f'Texto extraído do arquivo de imagem {file}: {text[:50]}...')
                                                     except Exception as e:
                                                         log.error(f"Erro ao processar arquivo de imagem {file}: {e}")
-
+                                            
+                                            clean_directory(extract_path, file_paths)
+                                            '''
                                             if os.path.exists(extract_path):
                                                 for item in os.listdir(extract_path):
                                                     item_path = os.path.join(extract_path, item)
@@ -351,10 +385,8 @@ try:
                                                             os.remove(item_path)
                                                     except Exception as e:
                                                         print(f'Erro ao tentar limpar arquivo temporario {item_path}: {e}')
-                                    
+                                            '''
                                         os.remove(file_temp)
-
-                                        # NÃO ESTA FUNCIONANDO
                                         status_checkmark(item, MarckCheck)
 
                             except Exception as e:
