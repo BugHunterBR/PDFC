@@ -199,14 +199,15 @@ try:
     outlook = client.Dispatch('Outlook.Application')
     namespace = outlook.GetNamespace('MAPI')
     try:
-        inbox = namespace.Folders[email_field].Folders['TESTE PDFC']      # ALTERAR
-    except Exception as e:
-        try:
-            inbox = namespace.Folders[email_field].Folders['Inbox']
-        except Exception as e:
-            log.error(f'Erro ao acessar caixa de entrada: {e}')
+        inbox = namespace.Folders[email_field].Folders['TESTE PDFC']      # ALTERAR  - inbox = namespace.GetDefaultFolder(6)
+    except Exception as e:                                                  # REMOVER #
+        try:                                                                # ------- #       
+            inbox = namespace.Folders[email_field].Folders['Inbox']         # ------- #
+        except Exception as e:                                              # ------- #
+            log.error(f'{e}')                                               # ------- #
     try:
         for item in tqdm(inbox.Items, desc='Processando e-mails', unit=' e-mail'):
+            switch = None
             if item.Class == 43 and item.FlagStatus == 0:
                 try:
                     sender = item.SenderEmailAddress
@@ -216,10 +217,13 @@ try:
                     receipt_year = receipt_date.year
                     
                     if domain and receipt_year:
-                        destination_folder_year = os.path.join(base_folder_path, f'Arquivo {receipt_year}')
-                        if not os.path.exists(destination_folder_year):
-                            os.makedirs(destination_folder_year)
-                            log.info(f'Pasta criada: {destination_folder_year}')
+                        try:
+                            destination_folder_year = os.path.join(base_folder_path, f'Arquivo {receipt_year}')
+                            if not os.path.exists(destination_folder_year):
+                                os.makedirs(destination_folder_year)
+                                log.info(f'Pasta criada: {destination_folder_year}')
+                        except Exception as e:                                             
+                                log.error(f'{e}')
 
                         for attachment in item.Attachments:
                             try:
@@ -240,6 +244,7 @@ try:
                                                     '''
                                                     #save_attachment(file_temp)
                                                     log.info(f'Texto extraído do arquivo pdf {attachment.FileName}: {text[:50]}...')
+                                                    switch = 1
                                                 if not text:
                                                     pdf_img = p2i(file_temp, dpi=300, poppler_path='poppler-24.08.0\\Library\\bin')
                                                     for i, img_convert in enumerate(pdf_img):
@@ -247,6 +252,7 @@ try:
                                                         improved_img = image_correction(image)
                                                         result_ocr = reader.readtext(improved_img)
                                                     '''
+                                                    NOTIFICAR COM ARQUIVO RUIM
                                                     if True:
                                                         notify_unreadable_cert(sender, file_temp)
                                                     '''
@@ -256,10 +262,11 @@ try:
                                                     '''
                                                     #save_attachment(file_temp)
                                                     log.info(f'Texto extraído da img {attachment.FileName}: {result_ocr[:50]}...')
+                                                    switch = 1
                                     os.remove(file_temp)
-                                    status_checkmark(item, MarckCheck)
                             except Exception as e:
-                                log.error(f'Erro ao processar arquivo pdf {attachment.FileName}: {e}')  
+                                log.error(f'{attachment.FileName}: {e}')  
+                                switch = 0
                             
                             try:    
                                 if attachment.FileName.lower().endswith(('.jpg', '.png')):
@@ -277,17 +284,13 @@ try:
                                                 USAR result_ocr (ONDE O TEXTO É RETORNADO)                      
                                             '''
                                             # save_attachment(file_temp)
-                                        log.info(f'Texto extraído do arquivo de imagem {attachment.FileName}: {result_ocr[:50]}...')
+                                            log.info(f'Texto extraído do arquivo de imagem {attachment.FileName}: {result_ocr[:50]}...')
+                                            switch = 1
                                     os.remove(file_temp)
-                                    status_checkmark(item, MarckCheck)        
                             except Exception as e:
-                                log.error(f'Erro ao processar arquivo de imagem {attachment.FileName}: {e}')
-                            '''
-                            _______________________________________________________________________________________
-
-                                                                TRABALHANDO AQUI
-                            _______________________________________________________________________________________
-                            '''
+                                log.error(f'{attachment.FileName}: {e}')
+                                switch = 0
+                            
                             try:       
                                 if attachment.FileName.lower().endswith(('.zip', '.7z', '.rar', '.tar', '.gz')):
                                     file_temp = save_temp(attachment)
@@ -302,9 +305,6 @@ try:
                                         '''
 
                                         if extract_path:
-                                            #text_content = process_pdfs_compressed(extract_path)
-                                            
-
                                             for file in os.listdir(extract_path):
                                                 file_path = os.path.join(extract_path, file)
                                                 if file.lower().endswith(('.pdf')):
@@ -323,8 +323,10 @@ try:
                                                                     '''
                                                                     # save_attachment(file_path)
                                                                     log.info(f'Texto extraído do arquivo pdf {file}: {text[:50]}...')
+                                                                    switch = 1
                                                     except Exception as e:
-                                                        log.error(f"Erro ao processar arquivo pdf {file}: {e}")
+                                                        log.error(f"{file}: {e}")
+                                                        switch = 0
 
                                                     if not text:
                                                         try:    
@@ -350,9 +352,10 @@ try:
                                                                             '''
                                                                             # save_attachment(file_path)
                                                                             log.info(f'Texto extraído do arquivo {file_path}: {extracted_text[:50]}...')
+                                                                            switch = 1
                                                         except Exception as e:
-                                                            log.error(f"Erro ao processar arquivo {file_path}: {e}")
-                                                            
+                                                            log.error(f"{file_path}: {e}")
+                                                            switch = 0
                                                     '''
                                                     ACRESCENTAR MELHORIA DE IMAGEM
                                                     '''
@@ -370,36 +373,31 @@ try:
                                                             '''
                                                                 # save_attachment(file_path)
                                                             log.info(f'Texto extraído do arquivo de imagem {file}: {text[:50]}...')
+                                                            switch = 1
                                                     except Exception as e:
-                                                        log.error(f"Erro ao processar arquivo de imagem {file}: {e}")
+                                                        log.error(f"{file}: {e}")
+                                                        switch = 0
                                             
                                             clean_directory(extract_path, file_paths)
-                                            '''
-                                            if os.path.exists(extract_path):
-                                                for item in os.listdir(extract_path):
-                                                    item_path = os.path.join(extract_path, item)
-                                                    try:
-                                                        if os.path.isdir(item_path):
-                                                            shutil.rmtree(item_path)
-                                                        else:
-                                                            os.remove(item_path)
-                                                    except Exception as e:
-                                                        print(f'Erro ao tentar limpar arquivo temporario {item_path}: {e}')
-                                            '''
                                         os.remove(file_temp)
-                                        status_checkmark(item, MarckCheck)
-
+                            
                             except Exception as e:
-                                log.error(f'Erro ao processar o arquivo compactado {attachment.FileName}: {e}')
-                
+                                log.error(f'{attachment.FileName}: {e}')
+
                 except Exception as e:
-                    log.error(f'Erro ao extrair informações do email {sender}: {e}') 
-                    item.MarkAsTask(MarckRed)
-                    item.FlagStatus = MarckRed
-                    item.Save()
-                  
+                    log.error(f'{sender}: {e}') 
+
+            if switch == 1:
+                status_checkmark(item, MarckCheck)
+                item.Move(namespace.Folders[email_field].Folders['PDFC_Processed'])
+            elif switch == 0:
+                item.MarkAsTask(MarckRed)
+                item.FlagStatus = MarckRed
+                item.Save()
+                item.Move(namespace.Folders[email_field].Folders['PDFC_Alert']) 
+
     except Exception as e:
-        log.error(f'Erro ao iterar e-mails: {e}')
+        log.error(f'{e}')
     
 except Exception as e:
-    log.error(f'Erro de processamento: {e}')
+    log.error(f'{e}')
